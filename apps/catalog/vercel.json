@@ -1,8 +1,9 @@
 {
-  "buildCommand": "cd ../.. && npx prisma generate --schema=libs/database/prisma/schema.prisma && npx nx build catalog --prod",
+  "buildCommand": "npx prisma generate --schema=../../libs/database/prisma/schema.prisma && npx nx build catalog --prod",
   "outputDirectory": "../../dist/apps/catalog/.next",
   "framework": "nextjs",
-  "devCommand": "cd ../.. && npx nx serve catalog",
+  "installCommand": "npm ci --legacy-peer-deps",
+  "devCommand": "npx nx serve catalog",
   "regions": [
     "iad1"
   ]
