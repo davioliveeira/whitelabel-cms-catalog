@@ -1,0 +1,412 @@
+// =============================================================================
+// CMS Catalogo White Label - Prisma Schema
+// =============================================================================
+// This schema defines the database structure for the multi-tenant SaaS platform.
+// Location: libs/database/prisma/schema.prisma
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// Store Model - Core Multi-tenancy Support
+// =============================================================================
+/// Store model for multi-tenancy support.
+/// Each store represents a business with their own catalog.
+/// Users are linked to stores for access control.
+model Store {
+  id String @id @default(uuid())
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Core Identity
+  // ─────────────────────────────────────────────────────────────────────────────
+  /// Unique URL slug for the store's public catalog (e.g., /perfumaria-elegance)
+  slug String @unique
+
+  /// Display name of the store
+  name String
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Brand Configuration (Whitelabel)
+  // ─────────────────────────────────────────────────────────────────────────────
+  /// URL to the store's logo image
+  logoUrl String?
+
+  /// URL to the store's favicon
+  faviconUrl String?
+
+  /// Primary brand color (hex format, e.g., #0f172a)
+  primaryColor String @default("#0f172a")
+
+  /// Secondary brand color (hex format, e.g., #64748b)
+  secondaryColor String @default("#64748b")
+
+  /// Border radius style (e.g., "0rem", "0.5rem", "1rem", "9999px")
+  borderRadius String @default("0.5rem")
+
+  /// Catalog customization configuration (JSON)
+  catalogConfig Json?
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // WhatsApp Configuration
+  // ─────────────────────────────────────────────────────────────────────────────
+  /// Primary WhatsApp number with country code (e.g., +5511999999999)
+  whatsappPrimary String?
+
+  /// Secondary WhatsApp number for groups/offers
+  whatsappSecondary String?
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Status
+  // ─────────────────────────────────────────────────────────────────────────────
+  /// Whether the store is active
+  isActive Boolean @default(true)
+
+  /// Whether the store has completed onboarding
+  onboardingComplete Boolean @default(false)
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Timestamps
+  // ─────────────────────────────────────────────────────────────────────────────
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Relations
+  // ─────────────────────────────────────────────────────────────────────────────
+  users           User[]
+  products        Product[]
+  orders          Order[]
+  analyticsEvents AnalyticsEvent[]
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Indexes
+  // ─────────────────────────────────────────────────────────────────────────────
+  @@index([slug])
+
+  // Keep old table name for migration compatibility
+  @@map("Tenant")
+}
+
+// =============================================================================
+// User Model - Authentication & Access Control
+// =============================================================================
+/// User model for authentication.
+/// Users belong to a store and have role-based access control.
+model User {
+  id String @id @default(uuid())
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Authentication
+  // ─────────────────────────────────────────────────────────────────────────────
+  /// User's name
+  name String?
+
+  /// Email address for login (unique across all users)
+  email String @unique
+
+  /// Hashed password (bcrypt)
+  passwordHash String
+
+  /// User role for access control
+  role Role @default(STORE_OWNER)
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Store Relationship
+  // ─────────────────────────────────────────────────────────────────────────────
+  /// Foreign key to the store this user belongs to (null for SUPER_ADMIN)
+  storeId String?
+  store   Store?  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Status
+  // ─────────────────────────────────────────────────────────────────────────────
+  /// Whether the user account is active
+  isActive Boolean @default(true)
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Timestamps
+  // ─────────────────────────────────────────────────────────────────────────────
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Relations (NextAuth)
+  // ─────────────────────────────────────────────────────────────────────────────
+  accounts Account[]
+  sessions Session[]
+  orders   Order[]
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Indexes
+  // ─────────────────────────────────────────────────────────────────────────────
+  @@index([email])
+  @@index([storeId])
+}
+
+// =============================================================================
+// Product Model - Store Inventory
+// =============================================================================
+/// Product model for tenant inventory.
+/// Each product belongs to a single tenant and contains pricing,
+/// availability, and categorization information.
+model Product {
+  id String @id @default(uuid())
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Store Relationship
+  // ─────────────────────────────────────────────────────────────────────────────
+  /// Foreign key to the store that owns this product
+  storeId String  @map("tenantId")
+  store   Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Product Information
+  // ─────────────────────────────────────────────────────────────────────────────
+  /// Product name (required)
+  name String
+
+  /// Product description (optional, can be long text)
+  description String? @db.Text
+
+  /// Brand name for filtering
+  brand String?
+
+  /// Category for filtering and grouping
+  category String?
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Pricing
+  // ─────────────────────────────────────────────────────────────────────────────
+  /// Original price ("De" price, shown crossed out)
+  originalPrice Decimal? @db.Decimal(10, 2)
+
+  /// Sale price ("Por" price, required)
+  salePrice Decimal @db.Decimal(10, 2)
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Media
+  // ─────────────────────────────────────────────────────────────────────────────
+  /// URL to product image
+  imageUrl String?
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Status
+  // ─────────────────────────────────────────────────────────────────────────────
+  /// Whether the product is available for sale
+  isAvailable Boolean @default(true)
+
+  /// Quantity available in stock
+  stockQuantity Int @default(0)
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Timestamps
+  // ─────────────────────────────────────────────────────────────────────────────
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Relations
+  // ─────────────────────────────────────────────────────────────────────────────
+  analyticsEvents AnalyticsEvent[]
+  orderItems      OrderItem[]
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Indexes
+  // ─────────────────────────────────────────────────────────────────────────────
+  @@index([storeId])
+  @@index([storeId, isAvailable])
+  @@index([brand])
+  @@index([category])
+}
+
+// =============================================================================
+// AnalyticsEvent Model - Product Engagement Tracking
+// =============================================================================
+/// Analytics event model for tracking product views and WhatsApp clicks.
+/// Each event records a customer interaction with a product for analytics purposes.
+model AnalyticsEvent {
+  id String @id @default(uuid())
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Store & Product Relationships
+  // ─────────────────────────────────────────────────────────────────────────────
+  /// Foreign key to the store
+  storeId String  @map("tenantId")
+  store   Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  /// Foreign key to the product
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Event Data
+  // ─────────────────────────────────────────────────────────────────────────────
+  /// Type of event: VIEW or WHATSAPP_CLICK
+  eventType EventType
+
+  /// Browser user agent (optional)
+  userAgent String?
+
+  /// HTTP referrer (optional)
+  referrer String?
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Timestamp
+  // ─────────────────────────────────────────────────────────────────────────────
+  createdAt DateTime @default(now())
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Indexes for efficient queries
+  // ─────────────────────────────────────────────────────────────────────────────
+  @@index([storeId])
+  @@index([productId])
+  @@index([createdAt])
+  /// Compound index for getRecentEvents() query optimization
+  /// Enables efficient filtering by storeId + sorting by createdAt DESC
+  @@index([storeId, createdAt(sort: Desc)])
+}
+
+// =============================================================================
+// Order Model - Sales Tracking
+// =============================================================================
+/// Order model for tracking manual WhatsApp sales.
+model Order {
+  id String @id @default(uuid())
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Store Relationship
+  // ─────────────────────────────────────────────────────────────────────────────
+  storeId String @map("tenantId")
+  store   Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Customer Info
+  // ─────────────────────────────────────────────────────────────────────────────
+  customerName  String
+  customerPhone String
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Seller INFO
+  // ─────────────────────────────────────────────────────────────────────────────
+  sellerId String?
+  seller   User?   @relation(fields: [sellerId], references: [id], onDelete: SetNull)
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Order Data
+  // ─────────────────────────────────────────────────────────────────────────────
+  status OrderStatus @default(COMPLETED)
+
+  items OrderItem[]
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Timestamps
+  // ─────────────────────────────────────────────────────────────────────────────
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Indexes
+  // ─────────────────────────────────────────────────────────────────────────────
+  @@index([storeId])
+  @@index([sellerId])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// OrderItem Model
+// =============================================================================
+model OrderItem {
+  id String @id @default(uuid())
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity  Int
+  unitPrice Decimal? @db.Decimal(10, 2)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+// =============================================================================
+// OrderStatus Enum
+// =============================================================================
+enum OrderStatus {
+  COMPLETED
+  CANCELED
+}
+
+// =============================================================================
+// EventType Enum
+// =============================================================================
+/// Event types for analytics tracking
+enum EventType {
+  VIEW // Product card became visible in viewport
+  WHATSAPP_CLICK // User clicked WhatsApp button
+}
+
+// =============================================================================
+// Role Enum - User Access Control
+// =============================================================================
+/// Role types for tenant access control
+enum Role {
+  SUPER_ADMIN // Platform administrator - can manage all tenants
+  STORE_OWNER // Store owner - can manage their own catalog only
+  ATTENDANT   // Attendant - can manage orders and products only
+}
+
+// =============================================================================
+// NextAuth.js Models (Optional - for OAuth and Database Sessions)
+// =============================================================================
+/// Account model for OAuth provider connections (Google, GitHub, etc.)
+/// Only needed if implementing OAuth. Not required for credentials-only auth.
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+/// Session model for database-based sessions
+/// Optional: Can use JWT sessions instead to avoid database writes on every request
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Verification token for email verification and password reset
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}

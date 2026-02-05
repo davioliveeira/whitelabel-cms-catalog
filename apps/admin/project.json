@@ -1,0 +1,16 @@
+{
+  "name": "admin",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/admin",
+  "projectType": "application",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project admin --web",
+  "targets": {
+    "dev": {
+      "command": "next dev",
+      "options": {
+        "port": 8000
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "buildCommand": "cd ../.. && npx nx build admin --prod",
+  "outputDirectory": "../../dist/apps/admin/.next",
+  "framework": "nextjs",
+  "installCommand": "cd ../.. && npm install",
+  "devCommand": "cd ../.. && npx nx serve admin",
+  "env": {
+    "DATABASE_URL": {
+      "type": "secret"
+    },
+    "NEXTAUTH_URL": {
+      "type": "secret"
+    },
+    "NEXTAUTH_SECRET": {
+      "type": "secret"
+    },
+    "NEXT_PUBLIC_CATALOG_URL": {
+      "type": "plain"
+    }
+  },
+  "regions": [
+    "iad1"
+  ],
+  "functions": {
+    "api/**/*.ts": {
+      "maxDuration": 10
+    }
+  }
+}

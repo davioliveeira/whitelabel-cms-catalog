@@ -1,0 +1,11 @@
+# Build outputs
+.next
+dist
+build
+*.log
+
+# Dependencies
+node_modules
+
+# Generated files
+.nx
