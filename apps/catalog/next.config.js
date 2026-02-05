@@ -7,10 +7,15 @@ const { composePlugins, withNx } = require('@nx/next');
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
-  nx: {},
+  nx: {
+    svgr: false,
+  },
 
   // Use standalone output for better deployment
   output: 'standalone',
+
+  // Output to current directory for Vercel
+  distDir: '.next',
 
   // Skip type checking during build (handled by Nx)
   typescript: {
