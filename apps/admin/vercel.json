@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd ../.. && npx nx build admin --prod",
+  "buildCommand": "cd ../.. && npx prisma generate --schema=libs/database/prisma/schema.prisma && npx nx build admin --prod",
   "outputDirectory": "../../dist/apps/admin/.next",
   "framework": "nextjs",
   "installCommand": "cd ../.. && npm install --legacy-peer-deps",

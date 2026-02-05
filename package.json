@@ -8,12 +8,12 @@
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
-    "build": "nx run-many --target=build --projects=admin,catalog --prod",
+    "build": "npm run prisma:generate && nx run-many --target=build --projects=admin,catalog --prod",
     "build:admin": "nx build admin --prod",
     "build:catalog": "nx build catalog --prod",
     "start:admin": "nx serve admin --prod --port=8000",
     "start:catalog": "nx serve catalog --prod --port=8001",
-    "prisma:generate": "prisma generate",
+    "prisma:generate": "prisma generate --schema=./libs/database/prisma/schema.prisma",
     "prisma:migrate": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "deploy:check": "npm run build && npm run prisma:generate"
