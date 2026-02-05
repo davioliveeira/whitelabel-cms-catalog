@@ -1,9 +1,9 @@
 {
-  "buildCommand": "npx prisma generate --schema=../../libs/database/prisma/schema.prisma && npx nx build admin --prod",
+  "buildCommand": "cd ../.. && npx prisma generate --schema=libs/database/prisma/schema.prisma && npx nx build admin --prod",
   "outputDirectory": "../../dist/apps/admin/.next",
   "framework": "nextjs",
-  "installCommand": "npm ci --legacy-peer-deps",
-  "devCommand": "npx nx serve admin",
+  "installCommand": "cd ../.. && npm ci --legacy-peer-deps",
+  "devCommand": "cd ../.. && npx nx serve admin",
   "regions": [
     "iad1"
   ]
