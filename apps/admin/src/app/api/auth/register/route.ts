@@ -11,9 +11,22 @@ import {
   RegisterTenantSchema,
   createTenant,
   TenantEmailExistsError,
-  type ApiResponse,
   type TenantPublicData,
 } from '@cms/shared';
+
+// =============================================================================
+// Types
+// =============================================================================
+
+type ApiResponse<T> = {
+  success: boolean;
+  data?: T;
+  error?: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
+};
 
 // =============================================================================
 // POST Handler

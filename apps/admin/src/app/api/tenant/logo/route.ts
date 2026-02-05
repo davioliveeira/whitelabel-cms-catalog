@@ -10,8 +10,21 @@ import { join } from 'path';
 import {
   updateTenantLogo,
   TenantNotFoundError,
-  type ApiResponse,
 } from '@cms/shared';
+
+// =============================================================================
+// Types
+// =============================================================================
+
+type ApiResponse<T> = {
+  success: boolean;
+  data?: T;
+  error?: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
+};
 
 // =============================================================================
 // Constants

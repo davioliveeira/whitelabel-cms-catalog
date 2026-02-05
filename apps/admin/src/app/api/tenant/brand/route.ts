@@ -12,9 +12,22 @@ import {
   getBrandSettings,
   updateBrandSettings,
   TenantNotFoundError,
-  type ApiResponse,
   type BrandSettingsData,
 } from '@cms/shared';
+
+// =============================================================================
+// Types
+// =============================================================================
+
+type ApiResponse<T> = {
+  success: boolean;
+  data?: T;
+  error?: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
+};
 
 // =============================================================================
 // Temporary: Get tenant ID from query param (until auth is implemented)

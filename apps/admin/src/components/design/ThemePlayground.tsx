@@ -16,7 +16,7 @@ export function ThemePlayground() {
   const { data: session } = useSession();
   
   // Ref to trigger save from child component
-  const saveRef = React.useRef<() => Promise<void>>();
+  const saveRef = React.useRef<(() => Promise<void>) | undefined>(undefined);
 
   // Fetch store slug
   React.useEffect(() => {

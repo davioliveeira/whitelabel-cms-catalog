@@ -5,7 +5,7 @@
 // unique slug generation, and password hashing.
 // =============================================================================
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import slugify from 'slugify';
 import type { TenantPublicData, RegisterTenantInput, BrandConfigInput, BrandSettingsData, WhatsAppConfigInput, WhatsAppSettingsData } from '../schemas/tenant.schema';
@@ -27,6 +27,7 @@ const prisma =
 if (process.env['NODE_ENV'] !== 'production') {
   globalForPrisma.prisma = prisma;
 }
+
 // =============================================================================
 // Constants
 // =============================================================================
@@ -117,12 +118,12 @@ export async function generateUniqueSlug(name: string): Promise<string> {
 // =============================================================================
 
 /**
- * Find a tenant by email address.
+ * Find a user by email address.
  * @param email - Email address to search
- * @returns Tenant or null
+ * @returns User or null
  */
-export async function findTenantByEmail(email: string) {
-  return prisma.store.findUnique({
+export async function findUserByEmail(email: string) {
+  return prisma.user.findUnique({
     where: { email: email.toLowerCase() },
   });
 }
@@ -155,10 +156,10 @@ export async function findTenantById(id: string) {
 
 /**
  * Create a new tenant with the given registration data.
- * Handles slug generation and password hashing.
+ * Handles slug generation, password hashing, and user creation.
  * 
  * @param input - Registration input (storeName, email, password)
- * @returns Public tenant data (no password hash)
+ * @returns Public tenant data
  * @throws Error if email already exists or creation fails
  */
 export async function createTenant(
@@ -167,8 +168,8 @@ export async function createTenant(
   const { storeName, email, password } = input;
 
   // Check if email already exists
-  const existingTenant = await findTenantByEmail(email);
-  if (existingTenant) {
+  const existingUser = await findUserByEmail(email);
+  if (existingUser) {
     throw new TenantEmailExistsError(email);
   }
 
@@ -178,25 +179,38 @@ export async function createTenant(
     hashPassword(password),
   ]);
 
-  // Create tenant
-  const tenant = await prisma.store.create({
-    data: {
-      name: storeName.trim(),
-      slug,
-      email: email.toLowerCase().trim(),
-      passwordHash,
-      // Default brand values are set in the schema
-      // Default status values are set in the schema
-    },
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      email: true,
-    },
-  });
+  // Create tenant and user in transaction
+  const [store] = await prisma.$transaction([
+    prisma.store.create({
+      data: {
+        name: storeName.trim(),
+        slug,
+        // Default brand values are set in the schema
+        // Default status values are set in the schema
+        users: {
+          create: {
+            email: email.toLowerCase().trim(),
+            passwordHash,
+            role: Role.STORE_OWNER,
+            name: storeName.trim(), // Determine appropriate name or extract from input if added
+          },
+        },
+      },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        logoUrl: true,
+        faviconUrl: true,
+        whatsappPrimary: true,
+        whatsappSecondary: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    }),
+  ]);
 
-  return tenant;
+  return store;
 }
 
 // =============================================================================
@@ -242,9 +256,9 @@ export async function updateBrandSettings(
     where: { id: tenantId },
     data: {
       logoUrl: settings.logoUrl,
-      primaryColor: settings.primaryColor,
-      secondaryColor: settings.secondaryColor,
-      borderRadius: settings.borderRadius,
+      ...(settings.primaryColor ? { primaryColor: settings.primaryColor } : {}),
+      ...(settings.secondaryColor ? { secondaryColor: settings.secondaryColor } : {}),
+      ...(settings.borderRadius ? { borderRadius: settings.borderRadius } : {}),
       onboardingComplete: true,
     },
     select: {

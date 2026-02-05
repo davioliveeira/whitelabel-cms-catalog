@@ -1,20 +1,9 @@
 {
-  "buildCommand": "cd ../.. && npx nx build catalog --prod",
+  "buildCommand": "cd ../.. && npx prisma generate --schema=libs/database/prisma/schema.prisma && npx nx build catalog --prod",
   "outputDirectory": "../../dist/apps/catalog/.next",
   "framework": "nextjs",
-  "installCommand": "cd ../.. && npm install",
   "devCommand": "cd ../.. && npx nx serve catalog",
-  "env": {
-    "DATABASE_URL": {
-      "type": "secret"
-    }
-  },
   "regions": [
     "iad1"
-  ],
-  "functions": {
-    "api/**/*.ts": {
-      "maxDuration": 10
-    }
-  }
+  ]
 }

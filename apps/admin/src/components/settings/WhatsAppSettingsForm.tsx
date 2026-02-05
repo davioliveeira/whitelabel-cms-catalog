@@ -55,7 +55,7 @@ export interface WhatsAppSettingsFormProps {
 // Helper Functions
 // =============================================================================
 
-function formatPhoneNumber(phone: string): string {
+function formatPhoneNumber(phone: string | undefined | null): string {
   if (!phone) return '';
 
   // Remove + from start for formatting

@@ -41,10 +41,10 @@ export async function GET(request: NextRequest) {
       distinctCategories,
     ] = await Promise.all([
       // Total stores
-      prisma.tenant.count(),
+      prisma.store.count(),
 
       // Active stores
-      prisma.tenant.count({
+      prisma.store.count({
         where: { isActive: true },
       }),
 
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       prisma.product.count(),
 
       // New stores in last 7 days
-      prisma.tenant.count({
+      prisma.store.count({
         where: {
           createdAt: {
             gte: sevenDaysAgo,

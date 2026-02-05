@@ -58,6 +58,7 @@ function mapToPublicData(product: {
   salePrice: Prisma.Decimal;
   imageUrl: string | null;
   isAvailable: boolean;
+  stockQuantity: number;
   createdAt: Date;
   updatedAt: Date;
 }): ProductPublicData {
@@ -71,6 +72,7 @@ function mapToPublicData(product: {
     salePrice: product.salePrice.toNumber(),
     imageUrl: product.imageUrl,
     isAvailable: product.isAvailable,
+    stockQuantity: product.stockQuantity,
     createdAt: product.createdAt,
     updatedAt: product.updatedAt,
   };

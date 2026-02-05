@@ -32,7 +32,7 @@ const PUBLIC_ROUTES = [
 export default auth((req) => {
   const { nextUrl } = req;
   const isAuthenticated = !!req.auth;
-  const tenantId = req.auth?.user?.tenantId;
+  const tenantId = req.auth?.user?.storeId;
 
   // Check if the route is public
   const isPublicRoute = PUBLIC_ROUTES.some((route) =>
