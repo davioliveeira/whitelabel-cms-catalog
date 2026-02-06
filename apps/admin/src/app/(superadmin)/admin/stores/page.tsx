@@ -313,7 +313,7 @@ export default function StoresManagementPage() {
                                   <DropdownMenuItem onClick={() => router.push(`/admin/stores/${store.id}`)} className="focus:bg-slate-800 focus:text-white cursor-pointer">
                                       <Edit className="h-4 w-4 mr-2" /> Editar Detalhes
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem  onClick={() => window.open(`http://${store.slug}.localhost:3000`, '_blank')} className="focus:bg-slate-800 focus:text-white cursor-pointer">
+                                  <DropdownMenuItem  onClick={() => window.open(`${process.env.NEXT_PUBLIC_CATALOG_URL || 'http://localhost:3000'}/${store.slug}`, '_blank')} className="focus:bg-slate-800 focus:text-white cursor-pointer">
                                       <ExternalLink className="h-4 w-4 mr-2" /> Acessar Loja
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator className="bg-slate-800" />

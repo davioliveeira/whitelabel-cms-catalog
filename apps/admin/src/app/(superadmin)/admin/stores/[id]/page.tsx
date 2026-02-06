@@ -204,7 +204,7 @@ export default function StoreDetailsPage() {
              <Button
                 variant="outline"
                 className="bg-transparent border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 hover:border-slate-600 transition-all"
-                onClick={() => window.open(`http://${store.slug}.localhost:3000`, '_blank')}
+                onClick={() => window.open(`${process.env.NEXT_PUBLIC_CATALOG_URL || 'http://localhost:3000'}/${store.slug}`, '_blank')}
              >
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Ver Loja

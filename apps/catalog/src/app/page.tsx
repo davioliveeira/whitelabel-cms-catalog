@@ -20,7 +20,7 @@ export default function LandingPage() {
             </h1>
           </div>
           <Button asChild variant="ghost" className="rounded-none border-2 border-transparent hover:border-black dark:hover:border-white">
-            <Link href="http://localhost:3001/login" className="flex items-center gap-2 font-bold">
+            <Link href={`${process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3001'}/login`} className="flex items-center gap-2 font-bold">
                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-log-in"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
                Login
             </Link>
